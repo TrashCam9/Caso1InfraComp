@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Mensajero extends Thread {
 
     private boolean estiloEnvio;
@@ -6,6 +8,7 @@ public class Mensajero extends Thread {
     private Buzon buzonEntrada;
     private Buzon buzonSalida;
     private int tiempoTransformacion;
+    private ArrayList<String> mensajesEnEspera;
 
     /**
      * Constructor para la clase Mensajero
@@ -24,5 +27,25 @@ public class Mensajero extends Thread {
         this.buzonEntrada = buzonEntrada;
         this.buzonSalida = buzonSalida;
         this.tiempoTransformacion = tiempoTransformacion;
+        this.mensajesEnEspera = new ArrayList<String>();
+    }
+
+    /**
+     * Guarda los mensajes existentes en la lista de espera de envíos del mensajero
+     */
+    public void transmitir(ArrayList<String> mensajesATransmitir) {
+        this.mensajesEnEspera = mensajesATransmitir;
+    }
+
+    public void run(){
+        
+    }
+
+    public void enviar(){
+
+    }
+
+    public void recibir(){
+
     }
 }
