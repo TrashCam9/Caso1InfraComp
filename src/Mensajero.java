@@ -149,10 +149,10 @@ public class Mensajero extends Thread {
 
     //ESTO HAY QUE QUITARLO PERO LO HICE PA HACER PRUEBAS TQM
     public static void main(String args[]){
-        Buzon b1 = new Buzon(4);
-        Buzon b2 = new Buzon(4);
-        Buzon b3 = new Buzon(4);
-        Buzon b4 = new Buzon(4);
+        Buzon b1 = new Buzon("A",4);
+        Buzon b2 = new Buzon("B",4);
+        Buzon b3 = new Buzon("C",4);
+        Buzon b4 = new Buzon("D",4);
         Mensajero m1 = new Mensajero(true, true, 1, b4, b1, 1);
         Mensajero m2 = new Mensajero(false, true, 2, b1, b2, 1);
         Mensajero m3 = new Mensajero(true, false, 3, b2, b3, 1);
