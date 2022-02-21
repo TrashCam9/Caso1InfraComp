@@ -38,7 +38,23 @@ public class Mensajero extends Thread {
     }
 
     public void run(){
-        
+        if (this.id == 1){
+            
+        }else{
+            String mensaje = mensajesEnEspera.getFirst();
+            while(!mensaje.equals("FIN")){
+                if (estiloRecibido){
+                    recibirActivo();
+                }else{
+                    recibirPasivo();
+                }
+                if (estiloEnvio){
+                    enviarActivo();
+                }else{
+                    enviarPasivo();
+                }
+            }
+        }
     }
 
     public String modificarMensaje(){
@@ -79,7 +95,7 @@ public class Mensajero extends Thread {
     public void enviarActivo(){
     	int capacidad = buzonSalida.getSize();
     	while(buzonSalida.getMensajes().size()==capacidad) {
-    		yield();
+    		Thread.yield();
     	}
     	String mensaje = modificarMensaje();
         synchronized(buzonSalida){
@@ -93,7 +109,7 @@ public class Mensajero extends Thread {
 
     public void recibirActivo(){
     	while(buzonEntrada.getMensajes().size()==0){
-            yield();
+            Thread.yield();
         }
         synchronized(buzonEntrada){
             String mensaje = buzonEntrada.darMensaje();

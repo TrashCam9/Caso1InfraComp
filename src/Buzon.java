@@ -14,7 +14,7 @@ public class Buzon {
     }
 
     public void recibirMensajes(String mensaje){
-
+        mensajes.add(mensaje);
     }
 
     public String darMensaje(){
