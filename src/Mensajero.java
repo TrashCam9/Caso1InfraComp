@@ -11,7 +11,6 @@ public class Mensajero extends Thread {
     private LinkedList<String> mensajesEnEspera;
     private boolean end;
 
-    //TODO: MODIFICAR EL COMPORTAMIENTO DE THREAD CON ID 1
     /**
      * Constructor para la clase Mensajero
      * @param estiloEnvio true si el envio es activo, false si el envio es pasivo
@@ -59,6 +58,7 @@ public class Mensajero extends Thread {
             }else{
                 enviarPasivo();
             }
+            enviarFin();
             while (!end){
                 if (estiloRecibido){
                     recibirActivo();
@@ -67,7 +67,7 @@ public class Mensajero extends Thread {
                 }
                 revisarMensajeEnEsperaFinal();
             }
-            
+            System.out.print("Todos los threads han terminado con exito. Imprimiendo mensajes:");
             System.out.println(mensajesEnEspera);
         }else{
             while(!end){
@@ -83,7 +83,6 @@ public class Mensajero extends Thread {
                 }
             }
         }
-        
     }
 
     public String modificarMensaje(){
@@ -101,6 +100,15 @@ public class Mensajero extends Thread {
         revisarMensajeEnEspera();
     	String mensaje = this.mensajesEnEspera.removeFirst()+"/"+String.valueOf(this.id)+sub;
         return mensaje;
+    }
+
+    public void enviarFin(){
+        mensajesEnEspera.add("FIN");
+        if (estiloEnvio){
+            enviarActivo();
+        }else{
+            enviarPasivo();
+        }
     }
 
     public void enviar(){
@@ -164,30 +172,5 @@ public class Mensajero extends Thread {
             }
             recibir();
         }
-    }
-
-
-    //ESTO HAY QUE QUITARLO PERO LO HICE PA HACER PRUEBAS TQM
-    public static void main(String args[]){
-        Buzon b1 = new Buzon("A",4);
-        Buzon b2 = new Buzon("B",4);
-        Buzon b3 = new Buzon("C",4);
-        Buzon b4 = new Buzon("D",4);
-        Mensajero m1 = new Mensajero(true, true, 1, b4, b1, 1);
-        Mensajero m2 = new Mensajero(false, true, 2, b1, b2, 1);
-        Mensajero m3 = new Mensajero(false, false, 3, b2, b3, 1);
-        Mensajero m4 = new Mensajero(false, false, 4, b3, b4, 1);
-        LinkedList<String> cosa = new LinkedList<String>();
-        cosa.add("Hola");
-        cosa.add("Adios");
-        cosa.add("Nos vemos");
-        cosa.add("Que tal");
-        cosa.add("Jeje");
-        cosa.add("FIN");
-        m1.transmitir(cosa);
-        m1.start();
-        m2.start();
-        m3.start();
-        m4.start();
     }
 }
