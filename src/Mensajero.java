@@ -1,5 +1,4 @@
 import java.util.LinkedList;
-import java.util.Queue;
 
 public class Mensajero extends Thread {
 
@@ -42,15 +41,8 @@ public class Mensajero extends Thread {
         
     }
 
-    public synchronized void enviarActivo(Buzon buzon){
-    	int capacidad = buzon.getSize();
-    	if(buzon.getMensajes().size()==capacidad) {
-    		try {
-    			wait();
-    		}catch(InterruptedException e) {}
-    	}
-    	
-    	String sub = "PP";
+    public String modificarMensaje(){
+        String sub = "PP";
     	
     	if(this.estiloEnvio && this.estiloRecibido) {
     		sub = "AA";
@@ -61,61 +53,63 @@ public class Mensajero extends Thread {
     	else if(!this.estiloEnvio && this.estiloRecibido) {
     		sub = "PA";
     	}
-    	
-    	
-    	String mensaje = this.mensajesEnEspera.getFirst()+"/"+String.valueOf(this.id)+sub;
-		LinkedList<String> mensajesNuevos = buzon.getMensajes();
-		mensajesNuevos.addLast(mensaje);
-		try {
-			sleep(this.tiempoTransformacion);
-		} catch (InterruptedException e) {}
-		buzon.setMensajes(mensajesNuevos);
-    }
-    
-    
-    public synchronized void enviarPasivo(Buzon buzon){
-    	int capacidad = buzon.getSize();
-    	while(buzon.getMensajes().size()==capacidad) {
-    		try {
-    			wait();
-    		}catch(InterruptedException e) {}
-    	}
-    	
-    	String sub = "PP";
-    	
-    	if(this.estiloEnvio && this.estiloRecibido) {
-    		sub = "AA";
-    	}
-    	else if(this.estiloEnvio && !this.estiloRecibido) {
-    		sub = "AP";
-    	}
-    	else if(!this.estiloEnvio && this.estiloRecibido) {
-    		sub = "PA";
-    	}
-    	
-    	
-    	String mensaje = this.mensajesEnEspera.getFirst()+"/"+String.valueOf(this.id)+sub;
-		LinkedList<String> mensajesNuevos = buzon.getMensajes();
-		mensajesNuevos.addLast(mensaje);
-		try {
-			sleep(this.tiempoTransformacion);
-		} catch (InterruptedException e) {}
-		buzon.setMensajes(mensajesNuevos);
+    	String mensaje = this.mensajesEnEspera.removeFirst()+"/"+String.valueOf(this.id)+sub;
+        return mensaje;
     }
 
-    public synchronized void recibirActivo(Buzon buzon){
-    	
+    public void enviarPasivo(){
+    	String mensaje = modificarMensaje();
+    	synchronized(buzonSalida){
+            int capacidad = buzonSalida.getSize();
+            while(buzonSalida.getMensajes().size()==capacidad) {
+                try {
+                    wait();
+                }catch(InterruptedException e) {}
+            }
+            LinkedList<String> mensajesNuevos = buzonSalida.getMensajes();
+            mensajesNuevos.addLast(mensaje);
+            try {
+                sleep(this.tiempoTransformacion);
+            } catch (InterruptedException e) {}
+            buzonSalida.recibirMensajes(mensaje);
+        }
     }
     
-    public synchronized void recibirPasivo(Buzon buzon){
-    	while(buzon.getMensajes().size()==0) {
-    		try {
-    			wait();
-    		}catch(InterruptedException e) {}
+    public void enviarActivo(){
+    	int capacidad = buzonSalida.getSize();
+    	while(buzonSalida.getMensajes().size()==capacidad) {
+    		yield();
     	}
-    	this.mensajesEnEspera.addLast(buzon.getMensajes().getFirst());
-    	LinkedList<String> mensajesNuevos = buzon.getMensajes();
-		mensajesNuevos.removeFirst();
-		buzon.setMensajes(mensajesNuevos);
+    	String mensaje = modificarMensaje();
+        synchronized(buzonSalida){
+            try {
+                sleep(this.tiempoTransformacion);
+            } catch (InterruptedException e) {}
+            buzonSalida.recibirMensajes(mensaje);
+        }
+    }
+
+    public void recibirActivo(){
+    	while(buzonEntrada.getMensajes().size()==0){
+            yield();
+        }
+        synchronized(buzonEntrada){
+            String mensaje = buzonEntrada.darMensaje();
+            mensajesEnEspera.addLast(mensaje);
+            notify();
+        }
+    }
+    
+    public void recibirPasivo(){
+        synchronized(buzonEntrada){
+            while(buzonEntrada.getMensajes().size()==0) {
+                try {
+                    wait();
+                }catch(InterruptedException e) {}
+            }
+            String mensaje = buzonEntrada.darMensaje();
+            mensajesEnEspera.addLast(mensaje);
+            notify();
+        }
     }
 }

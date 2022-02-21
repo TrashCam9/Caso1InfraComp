@@ -13,16 +13,20 @@ public class Buzon {
         this.mensajes = new LinkedList<String>();
     }
 
+    public void recibirMensajes(String mensaje){
+
+    }
+
+    public String darMensaje(){
+        return mensajes.removeFirst();
+    }
+
 	public LinkedList<String> getMensajes() {
 		return mensajes;
 	}
 
 	public int getSize() {
 		return size;
-	}
-
-	public void setMensajes(LinkedList<String> mensajes) {
-		this.mensajes = mensajes;
 	}
     
     
