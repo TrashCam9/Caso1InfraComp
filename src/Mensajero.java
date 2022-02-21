@@ -46,6 +46,12 @@ public class Mensajero extends Thread {
         }
     }
 
+    public void revisarMensajeEnEsperaFinal(){
+        if (mensajesEnEspera.getLast().length()>3){
+            end = mensajesEnEspera.getLast().substring(0, 3).equals("FIN");
+        }
+    }
+
     public void run(){
         if (id == 1){
             if (estiloEnvio){
@@ -53,22 +59,31 @@ public class Mensajero extends Thread {
             }else{
                 enviarPasivo();
             }
+            while (!end){
+                if (estiloRecibido){
+                    recibirActivo();
+                }else{
+                    recibirPasivo();
+                }
+                revisarMensajeEnEsperaFinal();
+            }
+            
+            System.out.println(mensajesEnEspera);
         }else{
-
-        }
-        while(!end){
-            if (estiloRecibido){
-                recibirActivo();
-            }else{
-                recibirPasivo();
-            }
-
-            if (estiloEnvio){
-                enviarActivo();
-            }else{
-                enviarPasivo();
+            while(!end){
+                if (estiloRecibido){
+                    recibirActivo();
+                }else{
+                    recibirPasivo();
+                }
+                if (estiloEnvio){
+                    enviarActivo();
+                }else{
+                    enviarPasivo();
+                }
             }
         }
+        
     }
 
     public String modificarMensaje(){
@@ -115,7 +130,6 @@ public class Mensajero extends Thread {
         while (mensajesEnEspera.size()>0){
             int capacidad = buzonSalida.getSize();
             while(buzonSalida.getMensajes().size()==capacidad) {
-                System.out.print(mensajesEnEspera);
                 Thread.yield();
             }
             synchronized(buzonSalida){
@@ -151,6 +165,7 @@ public class Mensajero extends Thread {
             recibir();
         }
     }
+
 
     //ESTO HAY QUE QUITARLO PERO LO HICE PA HACER PRUEBAS TQM
     public static void main(String args[]){
