@@ -53,6 +53,8 @@ public class Mensajero extends Thread {
             }else{
                 enviarPasivo();
             }
+        }else{
+
         }
         while(!end){
             if (estiloRecibido){
@@ -86,21 +88,26 @@ public class Mensajero extends Thread {
         return mensaje;
     }
 
+    public void enviar(){
+        String mensaje = modificarMensaje();
+        try {
+            sleep(this.tiempoTransformacion);
+        } catch (InterruptedException e) {}
+        buzonSalida.recibirMensajes(mensaje);
+        buzonSalida.notify();
+    }
+
     public void enviarPasivo(){
-    	
-    	synchronized(buzonSalida){
-            int capacidad = buzonSalida.getSize();
-            while(buzonSalida.getMensajes().size()==capacidad) {
-                try {
-                    buzonSalida.wait();
-                }catch(InterruptedException e) {}
+    	while (mensajesEnEspera.size()>0){
+            synchronized(buzonSalida){
+                int capacidad = buzonSalida.getSize();
+                while(buzonSalida.getMensajes().size()==capacidad) {
+                    try {
+                        buzonSalida.wait();
+                    }catch(InterruptedException e) {}
+                }
+                enviar();
             }
-            String mensaje = modificarMensaje();
-            try {
-                sleep(this.tiempoTransformacion);
-            } catch (InterruptedException e) {}
-            buzonSalida.recibirMensajes(mensaje);
-            buzonSalida.notify();
         }
     }
     
@@ -111,16 +118,18 @@ public class Mensajero extends Thread {
                 System.out.print(mensajesEnEspera);
                 Thread.yield();
             }
-            String mensaje = modificarMensaje();
             synchronized(buzonSalida){
-                try {
-                    sleep(this.tiempoTransformacion);
-                } catch (InterruptedException e) {}
-                buzonSalida.recibirMensajes(mensaje);
-                buzonSalida.notify();
+                enviar();
             }
         }
-    	
+    }
+
+    public void recibir(){
+        while(buzonEntrada.getMensajes().size()>0){
+            String mensaje = buzonEntrada.darMensaje();
+            mensajesEnEspera.addLast(mensaje);
+            buzonEntrada.notify();
+        }   
     }
 
     public void recibirActivo(){
@@ -128,9 +137,7 @@ public class Mensajero extends Thread {
             Thread.yield();
         }
         synchronized(buzonEntrada){
-            String mensaje = buzonEntrada.darMensaje();
-            mensajesEnEspera.addLast(mensaje);
-            buzonEntrada.notify();
+            recibir();
         }
     }
     
@@ -141,9 +148,7 @@ public class Mensajero extends Thread {
                     buzonEntrada.wait();
                 }catch(InterruptedException e) {}
             }
-            String mensaje = buzonEntrada.darMensaje();
-            mensajesEnEspera.addLast(mensaje);
-            buzonEntrada.notify();
+            recibir();
         }
     }
 
@@ -155,7 +160,7 @@ public class Mensajero extends Thread {
         Buzon b4 = new Buzon("D",4);
         Mensajero m1 = new Mensajero(true, true, 1, b4, b1, 1);
         Mensajero m2 = new Mensajero(false, true, 2, b1, b2, 1);
-        Mensajero m3 = new Mensajero(true, false, 3, b2, b3, 1);
+        Mensajero m3 = new Mensajero(false, false, 3, b2, b3, 1);
         Mensajero m4 = new Mensajero(false, false, 4, b3, b4, 1);
         LinkedList<String> cosa = new LinkedList<String>();
         cosa.add("Hola");
