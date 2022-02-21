@@ -9,7 +9,9 @@ public class Mensajero extends Thread {
     private Buzon buzonSalida;
     private int tiempoTransformacion;
     private LinkedList<String> mensajesEnEspera;
+    private boolean end;
 
+    //TODO: MODIFICAR EL COMPORTAMIENTO DE THREAD CON ID 1
     /**
      * Constructor para la clase Mensajero
      * @param estiloEnvio true si el envio es activo, false si el envio es pasivo
@@ -28,6 +30,7 @@ public class Mensajero extends Thread {
         this.buzonSalida = buzonSalida;
         this.tiempoTransformacion = tiempoTransformacion;
         this.mensajesEnEspera = new LinkedList<String>();
+        this.end = false;
     }
 
     /**
@@ -37,22 +40,31 @@ public class Mensajero extends Thread {
         this.mensajesEnEspera = mensajesATransmitir;
     }
 
+    public void revisarMensajeEnEspera(){
+        if (mensajesEnEspera.getFirst().length()>3){
+            end = mensajesEnEspera.getFirst().substring(0, 3).equals("FIN");
+        }
+    }
+
     public void run(){
-        if (this.id == 1){
-            
-        }else{
-            String mensaje = mensajesEnEspera.getFirst();
-            while(!mensaje.equals("FIN")){
-                if (estiloRecibido){
-                    recibirActivo();
-                }else{
-                    recibirPasivo();
-                }
-                if (estiloEnvio){
-                    enviarActivo();
-                }else{
-                    enviarPasivo();
-                }
+        if (id == 1){
+            if (estiloEnvio){
+                enviarActivo();
+            }else{
+                enviarPasivo();
+            }
+        }
+        while(!end){
+            if (estiloRecibido){
+                recibirActivo();
+            }else{
+                recibirPasivo();
+            }
+
+            if (estiloEnvio){
+                enviarActivo();
+            }else{
+                enviarPasivo();
             }
         }
     }
@@ -69,42 +81,46 @@ public class Mensajero extends Thread {
     	else if(!this.estiloEnvio && this.estiloRecibido) {
     		sub = "PA";
     	}
+        revisarMensajeEnEspera();
     	String mensaje = this.mensajesEnEspera.removeFirst()+"/"+String.valueOf(this.id)+sub;
         return mensaje;
     }
 
     public void enviarPasivo(){
-    	String mensaje = modificarMensaje();
+    	
     	synchronized(buzonSalida){
             int capacidad = buzonSalida.getSize();
             while(buzonSalida.getMensajes().size()==capacidad) {
                 try {
-                    wait();
+                    buzonSalida.wait();
                 }catch(InterruptedException e) {}
             }
-            LinkedList<String> mensajesNuevos = buzonSalida.getMensajes();
-            mensajesNuevos.addLast(mensaje);
+            String mensaje = modificarMensaje();
             try {
                 sleep(this.tiempoTransformacion);
             } catch (InterruptedException e) {}
             buzonSalida.recibirMensajes(mensaje);
-            notify();
+            buzonSalida.notify();
         }
     }
     
     public void enviarActivo(){
-    	int capacidad = buzonSalida.getSize();
-    	while(buzonSalida.getMensajes().size()==capacidad) {
-    		Thread.yield();
-    	}
-    	String mensaje = modificarMensaje();
-        synchronized(buzonSalida){
-            try {
-                sleep(this.tiempoTransformacion);
-            } catch (InterruptedException e) {}
-            buzonSalida.recibirMensajes(mensaje);
-            notify();
+        while (mensajesEnEspera.size()>0){
+            int capacidad = buzonSalida.getSize();
+            while(buzonSalida.getMensajes().size()==capacidad) {
+                System.out.print(mensajesEnEspera);
+                Thread.yield();
+            }
+            String mensaje = modificarMensaje();
+            synchronized(buzonSalida){
+                try {
+                    sleep(this.tiempoTransformacion);
+                } catch (InterruptedException e) {}
+                buzonSalida.recibirMensajes(mensaje);
+                buzonSalida.notify();
+            }
         }
+    	
     }
 
     public void recibirActivo(){
@@ -114,7 +130,7 @@ public class Mensajero extends Thread {
         synchronized(buzonEntrada){
             String mensaje = buzonEntrada.darMensaje();
             mensajesEnEspera.addLast(mensaje);
-            notify();
+            buzonEntrada.notify();
         }
     }
     
@@ -122,12 +138,36 @@ public class Mensajero extends Thread {
         synchronized(buzonEntrada){
             while(buzonEntrada.getMensajes().size()==0) {
                 try {
-                    wait();
+                    buzonEntrada.wait();
                 }catch(InterruptedException e) {}
             }
             String mensaje = buzonEntrada.darMensaje();
             mensajesEnEspera.addLast(mensaje);
-            notify();
+            buzonEntrada.notify();
         }
+    }
+
+    //ESTO HAY QUE QUITARLO PERO LO HICE PA HACER PRUEBAS TQM
+    public static void main(String args[]){
+        Buzon b1 = new Buzon(4);
+        Buzon b2 = new Buzon(4);
+        Buzon b3 = new Buzon(4);
+        Buzon b4 = new Buzon(4);
+        Mensajero m1 = new Mensajero(true, true, 1, b4, b1, 1);
+        Mensajero m2 = new Mensajero(false, true, 2, b1, b2, 1);
+        Mensajero m3 = new Mensajero(true, false, 3, b2, b3, 1);
+        Mensajero m4 = new Mensajero(false, false, 4, b3, b4, 1);
+        LinkedList<String> cosa = new LinkedList<String>();
+        cosa.add("Hola");
+        cosa.add("Adios");
+        cosa.add("Nos vemos");
+        cosa.add("Que tal");
+        cosa.add("Jeje");
+        cosa.add("FIN");
+        m1.transmitir(cosa);
+        m1.start();
+        m2.start();
+        m3.start();
+        m4.start();
     }
 }
