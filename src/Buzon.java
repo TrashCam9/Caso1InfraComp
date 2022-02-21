@@ -1,6 +1,7 @@
 import java.util.LinkedList;
 
 public class Buzon {
+	private String id;
     private LinkedList<String> mensajes;
     private int size;
 
@@ -8,7 +9,8 @@ public class Buzon {
      * Constructor de Buzon
      * @param size Tamanio del buzon
      */
-    public Buzon(int size){
+    public Buzon(String id, int size){
+    	this.id = id;
         this.size = size;
         this.mensajes = new LinkedList<String>();
     }
