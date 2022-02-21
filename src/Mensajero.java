@@ -72,6 +72,7 @@ public class Mensajero extends Thread {
                 sleep(this.tiempoTransformacion);
             } catch (InterruptedException e) {}
             buzonSalida.recibirMensajes(mensaje);
+            notify();
         }
     }
     
@@ -86,6 +87,7 @@ public class Mensajero extends Thread {
                 sleep(this.tiempoTransformacion);
             } catch (InterruptedException e) {}
             buzonSalida.recibirMensajes(mensaje);
+            notify();
         }
     }
 
